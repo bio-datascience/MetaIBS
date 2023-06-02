@@ -1,0 +1,98 @@
+---
+title: "Generate Dataset for ML Bootcamp"
+output: html_notebook
+---
+
+The aim of this document is to generate a combined dataset for a ML bootcamp.
+
+```{r}
+library(phyloseq)
+library(ggplot2)
+library(tidyverse)
+library(reshape2)
+library(pheatmap)
+library(RColorBrewer)
+library(pals)
+```
+
+```{r}
+## 1.2. Data ####
+path.root <- "." # CHANGE THIS ROOT DIRECTORY ON YOUR COMPUTER
+# path.data <- file.path(path.root, "data/analysis-combined/03_Heatmaps")
+
+path.phylobj    <- file.path("../data/phyloseq-objects/phyloseq-without-phylotree")
+datasets        <- list.files(path.phylobj, pattern=".rds")
+phyloseqobjects <- sapply(datasets, function(x) readRDS(file.path(path.phylobj, x)), USE.NAMES=T, simplify=F)
+# names(phyloseqobjects) # sanity check
+
+
+
+
+# ***********************
+# 2. PREPROCESS DATA ####
+# ***********************
+
+## 2.1. Merge phyloseq objects ####
+physeq.all <- merge_phyloseq(phyloseqobjects[[1]], phyloseqobjects[[2]]) # Merge first two phyloseq objects in the list
+# if there are more than 2 phyloseq objects, merge the rest of them
+if(length(phyloseqobjects)>2){
+  for (i in 3:length(phyloseqobjects)){
+    print(paste0("merging with phyloseq object #", i))
+    physeq.all <- merge_phyloseq(physeq.all, phyloseqobjects[[i]])
+  }
+}
+
+
+## 2.2. Separate fecal & sigmoid samples ####
+physeq.fecal <- subset_samples(physeq.all, sample_type == 'stool') # 2,220 samples
+physeq.fecal <- prune_taxa(taxa_sums(physeq.fecal)>0, physeq.fecal) # remove ASVs that are not present anymore
+cat("Nb of fecal samples:", nsamples(physeq.fecal))
+
+physeq.sigmoid <- subset_samples(physeq.all, sample_type == 'sigmoid') # 431 samples
+physeq.sigmoid <- prune_taxa(taxa_sums(physeq.sigmoid)>0, physeq.sigmoid) # remove ASVs that are not present anymore
+cat("\nNb of sigmoid samples:", nsamples(physeq.sigmoid))
+```
+```{r}
+family.agg_phylo <- physeq.fecal %>%
+  speedyseq::tax_glom(taxrank = "Family") 
+family.agg <- family.agg_phylo %>%
+  psmelt()
+# saveRDS(family.agg, file.path(path.data, "famGlom_fecal.rds"))  # recommend to save it as takes a while to compute
+# family.agg <- readRDS(file.path(path.data, "famGlom_fecal.rds"))
+
+
+# Identify families present in at least 3 datasets
+list.family <- family.agg %>%
+  filter(Abundance > 0) %>%
+  group_by(Family) %>%
+  summarise(nb_datasets = n_distinct(author)) %>%
+  filter(nb_datasets>2) %>%
+  ungroup()
+list.family <- list.family$Family # 116 Families
+
+
+# Agglomerate again at family level, but keeping only families present in at least 3 datasets
+# family.agg <- subset_taxa(physeq.fecal, Family %in% list.family) %>%
+#   tax_glom(taxrank = "Family") %>%
+#   transform_sample_counts(function(x) {x/sum(x)} ) %>%
+#   psmelt()
+
+# Get dataframe family x samples
+familyTable <- acast(family.agg %>% filter(Family %in% list.family),
+                     Family ~ Sample, fun.aggregate=sum, value.var = 'Abundance')
+
+family_phylo <- subset_taxa(family.agg_phylo, Family %in% list.family)
+
+# Sanity checks
+familyTable[1:5,1:5]
+dim(familyTable)
+table(is.na(familyTable))
+table(colSums(familyTable)) # sum per sample
+table(rownames(familyTable))
+table(rowSums(familyTable) == 0)
+
+saveRDS(family_phylo, "../data/phyloseq-objects/family.RDS")
+```
+
+
+

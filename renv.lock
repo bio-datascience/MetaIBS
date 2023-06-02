@@ -1802,55 +1802,6 @@
       ],
       "Hash": "a57f0f5dbcfd0d77ad4ff33032f5dc79"
     },
-    "ggtree": {
-      "Package": "ggtree",
-      "Version": "3.2.1",
-      "Source": "Bioconductor",
-      "RemoteType": "bioconductor",
-      "Remotes": "GuangchuangYu/treeio",
-      "git_url": "https://git.bioconductor.org/packages/ggtree",
-      "git_branch": "RELEASE_3_14",
-      "git_last_commit": "d3747e6",
-      "git_last_commit_date": "2021-11-14",
-      "Requirements": [
-        "R",
-        "ape",
-        "aplot",
-        "dplyr",
-        "ggfun",
-        "ggplot2",
-        "grid",
-        "magrittr",
-        "methods",
-        "purrr",
-        "rlang",
-        "scales",
-        "tidyr",
-        "tidytree",
-        "treeio",
-        "utils",
-        "yulab.utils"
-      ],
-      "Hash": "c06d1d4b6b9c6be846276d74ff8c1596"
-    },
-    "ggtreeExtra": {
-      "Package": "ggtreeExtra",
-      "Version": "1.4.2",
-      "Source": "Bioconductor",
-      "git_url": "https://git.bioconductor.org/packages/ggtreeExtra",
-      "git_branch": "RELEASE_3_14",
-      "git_last_commit": "c5bde8b",
-      "git_last_commit_date": "2022-03-06",
-      "Requirements": [
-        "ggnewscale",
-        "ggplot2",
-        "ggtree",
-        "rlang",
-        "stats",
-        "utils"
-      ],
-      "Hash": "1447c9a03742ce2d64a006498eb1568b"
-    },
     "ggupset": {
       "Package": "ggupset",
       "Version": "0.3.0",
